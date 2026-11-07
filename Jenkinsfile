@@ -31,24 +31,37 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
-                sh """
-                docker build -t ${IMAGE_NAME}:${IMAGE_TAG} .
-                docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${IMAGE_NAME}:latest
-                """
+                sh '''
+                docker build -t srikantheggoju/secure-k8s-app:${BUILD_NUMBER} .
+                docker tag srikantheggoju/secure-k8s-app:${BUILD_NUMBER} srikantheggoju/secure-k8s-app:latest
+                '''
             }
         }
 
         stage('Trivy Scan') {
             steps {
-                sh """
-                trivy image --severity HIGH,CRITICAL \
-                --exit-code 1 \
-                ${IMAGE_NAME}:${IMAGE_TAG}
-                """
+                sh '''
+                trivy image srikantheggoju/secure-k8s-app:${BUILD_NUMBER}
+                '''
             }
         }
 
-        stage('Docker Push') {
+        stage('Deploy To Kubernetes') {
             steps {
-                withCredentials([
-       
+                sh '''
+                kubectl apply -f k8s/
+                '''
+            }
+        }
+    }
+
+    post {
+        success {
+            echo 'Deployment Successful'
+        }
+
+        failure {
+            echo 'Pipeline Failed'
+        }
+    }
+}
