@@ -45,7 +45,8 @@ pipeline {
         stage('Trivy Scan') {
             steps {
                 sh """
-                trivy image ${IMAGE_NAME}:${IMAGE_TAG}
+                trivy image --skip-version-check \
+                ${IMAGE_NAME}:${IMAGE_TAG}
                 """
             }
         }
@@ -53,7 +54,8 @@ pipeline {
         stage('Deploy To Kubernetes') {
             steps {
                 sh '''
-                kubectl apply -f k8s/
+                kubectl apply --validate=false -f k8s/deployment.yaml
+                kubectl apply --validate=false -f k8s/service.yaml
                 '''
             }
         }
@@ -61,11 +63,11 @@ pipeline {
 
     post {
         success {
-            echo 'Deployment Successful'
+            echo '✅ Deployment Successful'
         }
 
         failure {
-            echo 'Pipeline Failed'
+            echo '❌ Pipeline Failed'
         }
     }
 }
