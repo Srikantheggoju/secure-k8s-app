@@ -10,13 +10,17 @@ pipeline {
 
         stage('SonarQube Scan') {
             steps {
-                withSonarQubeEnv('sonarqube') {
-                    sh '''
-                    sonar-scanner \
-                    -Dsonar.projectKey=secure-k8s-app \
-                    -Dsonar.projectName=secure-k8s-app \
-                    -Dsonar.sources=.
-                    '''
+                script {
+                    def scannerHome = tool 'sonar-scanner'
+
+                    withSonarQubeEnv('sonarqube') {
+                        sh """
+                        ${scannerHome}/bin/sonar-scanner \
+                        -Dsonar.projectKey=secure-k8s-app \
+                        -Dsonar.projectName=secure-k8s-app \
+                        -Dsonar.sources=.
+                        """
+                    }
                 }
             }
         }
@@ -31,18 +35,18 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
-                sh '''
-                docker build -t srikantheggoju/secure-k8s-app:${BUILD_NUMBER} .
-                docker tag srikantheggoju/secure-k8s-app:${BUILD_NUMBER} srikantheggoju/secure-k8s-app:latest
-                '''
+                sh """
+                docker build -t ${IMAGE_NAME}:${IMAGE_TAG} .
+                docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${IMAGE_NAME}:latest
+                """
             }
         }
 
         stage('Trivy Scan') {
             steps {
-                sh '''
-                trivy image srikantheggoju/secure-k8s-app:${BUILD_NUMBER}
-                '''
+                sh """
+                trivy image ${IMAGE_NAME}:${IMAGE_TAG}
+                """
             }
         }
 
