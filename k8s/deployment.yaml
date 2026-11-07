@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: secure-k8s-app
+
+spec:
+  replicas: 2
+
+  selector:
+    matchLabels:
+      app: secure-k8s-app
+
+  template:
+    metadata:
+      labels:
+        app: secure-k8s-app
+
+    spec:
+      containers:
+      - name: secure-k8s-app
+        image: srikantheggoju/secure-k8s-app:latest
+
+        ports:
+        - containerPort: 5000
